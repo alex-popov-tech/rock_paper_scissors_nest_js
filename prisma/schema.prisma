@@ -1,0 +1,56 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Option {
+  ROCK
+  PAPER
+  SCISSORS
+  LEAVE
+}
+
+enum GameStatus {
+  DRAW
+  WIN
+}
+
+model User {
+  id    Int @default(autoincrement()) @id
+  username  String @unique
+  password  String
+
+  // choice to use first/second players affect schema,
+  // better be using users array like m2m table with 'choice' field
+  firstPlayerGames GameHistory[] @relation("FirstPlayerGames")
+  secondPlayerGames GameHistory[] @relation("SecondPlayerGames")
+  winGames GameHistory[] @relation("WinGames")
+}
+
+model GameHistory {
+  id    Int @default(autoincrement()) @id
+
+  firstPlayer User @relation("FirstPlayerGames",fields: [firstPlayerId], references: [id], onDelete: Cascade)
+  firstPlayerId Int
+  firstPlayerOption Option?
+
+  secondPlayer User? @relation("SecondPlayerGames",fields: [secondPlayerId], references: [id], onDelete: Cascade)
+  secondPlayerId Int?
+  secondPlayerOption Option?
+
+  winner User? @relation("WinGames", fields: [winnerId], references: [id], onDelete: Cascade)
+  winnerId Int?
+  winnerOption Option?
+
+  status GameStatus
+}
